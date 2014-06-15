@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Serial Communications"
+            id="net.jetblack.serialterminal.ui">
+      </category>
+      <view
+            name="Serial Terminal"
+            icon="icons/sample.gif"
+            category="net.jetblack.serialterminal.ui"
+            class="net.jetblack.serialterminal.ui.views.SerialTerminalView"
+            id="net.jetblack.serialterminal.ui.views.SerialTerminalView">
+      </view>
+   </extension>
+   <extension point="org.eclipse.ui.keywords">
+		<keyword id="net.jetblack.serialterminal.ui.keywords" label="baud rate line ending serial terminal port stop data bits" />
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferencePage"
+            id="net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferencePage"
+            category="org.eclipse.ui.preferencePages.Workbench"
+            name="Serial Terminal">
+            <keywordReference id="net.jetblack.serialterminal.ui.keywords" />
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferences">
+      </initializer>
+   </extension>
+
+</plugin>
