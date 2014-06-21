@@ -7,6 +7,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbench;
 
 import net.jetblack.serialterminal.ui.Activator;
+import net.jetblack.serialterminal.ui.io.SerialUtils;
 import net.jetblack.serialterminal.ui.preferences.editors.IntComboFieldEditor;
 import net.jetblack.serialterminal.ui.preferences.editors.StringComboFieldEditor;
 import net.jetblack.serialterminal.ui.preferences.editors.StringSource;
@@ -22,11 +23,11 @@ public class SerialTerminalPreferencePage extends FieldEditorPreferencePage
 
 	public void createFieldEditors() {
 		addField(new StringComboFieldEditor(SERIAL_PORT, "Serial Port", getSerialPortStringSource(), getFieldEditorParent()));
-		addField(new IntComboFieldEditor(BAUDRATE, "Baud Rate", BAUDRATE_NAMES, BAUDRATE_VALUES, -1, getFieldEditorParent()));
-		addField(new IntComboFieldEditor(PARITY, "Parity", PARITY_NAMES, PARITY_VALUES, -1, getFieldEditorParent()));
-		addField(new IntComboFieldEditor(DATABITS, "Data Bits", DATABITS_NAMES, DATABITS_VALUES, -1, getFieldEditorParent()));
-		addField(new IntComboFieldEditor(STOPBITS, "Stop Bits", STOPBITS_NAMES, STOPBITS_VALUES, -1, getFieldEditorParent()));
-		addField(new ComboFieldEditor(LINE_ENDING, "Line Ending", LINE_ENDING_NAMES_AND_VALUES, getFieldEditorParent()));
+		addField(new IntComboFieldEditor(BAUDRATE, "Baud Rate", SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES, -1, getFieldEditorParent()));
+		addField(new IntComboFieldEditor(PARITY, "Parity", SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES, -1, getFieldEditorParent()));
+		addField(new IntComboFieldEditor(DATABITS, "Data Bits", SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES, -1, getFieldEditorParent()));
+		addField(new IntComboFieldEditor(STOPBITS, "Stop Bits", SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES, -1, getFieldEditorParent()));
+		addField(new ComboFieldEditor(LINE_ENDING, "Line Ending", SerialUtils.LINE_ENDING_NAMES_AND_VALUES, getFieldEditorParent()));
 	}
 
 	public void init(IWorkbench workbench) {

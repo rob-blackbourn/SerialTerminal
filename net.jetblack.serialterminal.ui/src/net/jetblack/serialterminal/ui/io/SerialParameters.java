@@ -190,48 +190,18 @@ public class SerialParameters implements SerialTerminalPreferenceConstants, IPro
 		return "\r";
 	}
 
-	public static String getBaudRateName(int value) {
-		return getNameFromValue(BAUDRATE_NAMES, BAUDRATE_VALUES, value);
-	}
-
-	public static String getParityName(int value) {
-		return getNameFromValue(PARITY_NAMES, PARITY_VALUES, value);
-	}
-
-	public static String getDataBitsName(int value) {
-		return getNameFromValue(DATABITS_NAMES, DATABITS_VALUES, value);
-	}
-
-	public static String getStopBitsName(int value) {
-		return getNameFromValue(STOPBITS_NAMES, STOPBITS_VALUES, value);
-	}
-
-	public static String getLineEndingName(String lineEnding) {
-		for (int i = 0; i < LINE_ENDING_NAMES_AND_VALUES.length; ++i) {
-			if (LINE_ENDING_NAMES_AND_VALUES[i][1].equals(lineEnding)) {
-				return LINE_ENDING_NAMES_AND_VALUES[i][0];
-			}
-		}
-		return null;
+	public String getSummary() {
+		return SerialUtils.getSummary(dataBits, parity, stopBits);
 	}
 	
-	private static String getNameFromValue(String[] names, int[] values, int value) {
-		for (int i = 0; i < values.length; ++i) {
-			if (values[i] == value) {
-				return names[i];
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public String toString() {
 		return
 				"PortName=\"" + portName
-				+ "\", BaudRate=" + getBaudRateName(baudRate)
-				+ ", Parity=" + getParityName(parity)
-				+ ", DataBits=" + getDataBitsName(dataBits)
-				+ ", StopBits=" + getStopBitsName(stopBits)
-				+ ", LineEnding=" + getLineEndingName(lineEnding);
+				+ "\", BaudRate=" + SerialUtils.getBaudRateName(baudRate)
+				+ ", Parity=" + SerialUtils.getParityName(parity)
+				+ ", DataBits=" + SerialUtils.getDataBitsName(dataBits)
+				+ ", StopBits=" + SerialUtils.getStopBitsName(stopBits)
+				+ ", LineEnding=" + SerialUtils.getLineEndingName(lineEnding);
 	}
 }
