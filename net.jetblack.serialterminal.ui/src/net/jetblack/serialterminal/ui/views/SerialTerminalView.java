@@ -1,18 +1,21 @@
 package net.jetblack.serialterminal.ui.views;
 
 import java.io.IOException;
-import jssc.SerialPort;
+
+import jssc.SerialPortList;
+
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.*;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.SWT;
 
 import net.jetblack.serialterminal.ui.Activator;
@@ -20,28 +23,41 @@ import net.jetblack.serialterminal.ui.io.SerialConnection;
 import net.jetblack.serialterminal.ui.io.SerialException;
 import net.jetblack.serialterminal.ui.io.SerialListener;
 import net.jetblack.serialterminal.ui.io.SerialParameters;
-import net.jetblack.serialterminal.ui.io.SerialParametersListener;
 import net.jetblack.serialterminal.ui.io.SerialUtils;
 import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConstants;
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
-import net.jetblack.serialterminal.ui.swt.layout.Size;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.swt.layout.StripLayout;
+import net.jetblack.serialterminal.ui.utils.IntParameterListener;
+import net.jetblack.serialterminal.ui.utils.IntParameterSelectionListener;
+import net.jetblack.serialterminal.ui.utils.StringParameterListener;
 
-public class SerialTerminalView extends ViewPart implements SerialTerminalPreferenceConstants, SerialListener, SerialParametersListener {
+public class SerialTerminalView
+	extends ViewPart
+	implements SerialTerminalPreferenceConstants,
+		SerialListener,
+		IntParameterListener,
+		StringParameterListener,
+		IPropertyChangeListener,
+		SelectionListener {
 
 	public static final String ID = "net.jetblack.serialterminal.ui.views.SerialTerminalView";
 
 	private final SerialParameters serialParameters;
 
-	private Text sendText, statusText, serialPortText, baudRateText, parametersText;
+	private Text sendText;
+	private Button sendButton, refreshSerialPortsButton, reconnectButton;
+	private Combo serialPortCombo, baudRateCombo, stopBitsCombo, dataBitsCombo, parityCombo;
+	private Composite statusRow;
 	private StyledText textOutput;
 	private boolean isAutoScrolling = true;
 	
 	private SerialConnection serialConnection;
 
 	public SerialTerminalView() {
-		serialParameters = new SerialParameters(Activator.getDefault().getPreferenceStore());
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		serialParameters = new SerialParameters(preferenceStore);
+		preferenceStore.addPropertyChangeListener(this);
 	}
 
 	public void createPartControl(Composite parent) {
@@ -57,18 +73,9 @@ public class SerialTerminalView extends ViewPart implements SerialTerminalPrefer
 		sendRow.setLayoutData(new StripData(true, false, new Margin(3, 3, 3, 0)));
 		sendRow.setLayout(new StripLayout(true));
 		
-		Button sendButton = new Button(sendRow, SWT.PUSH);
+		sendButton = new Button(sendRow, SWT.PUSH);
 		sendButton.setText("Send");
-		sendButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				onSendSelected();
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		});
+		sendButton.addSelectionListener(this);
 
 		sendText = new Text(sendRow, SWT.SINGLE | SWT.BORDER);
 		sendText.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 0)));
@@ -91,36 +98,101 @@ public class SerialTerminalView extends ViewPart implements SerialTerminalPrefer
 		textOutput.setEditable(false);
 		
 		// 3rd row
-		Composite statusRow = new Composite(parent, SWT.NO_TRIM);
+		statusRow = new Composite(parent, SWT.NO_TRIM);
 		statusRow.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 3)));
 		statusRow.setLayout(new StripLayout(true));
 		
-		statusText = new Text(statusRow, SWT.READ_ONLY | SWT.BORDER);
-		statusText.setLayoutData(new StripData(true, false, new Margin(0, 0, 3, 0)));
+		reconnectButton = new Button(statusRow, SWT.DEFAULT);
+		reconnectButton.setText("Reconnect");
+		reconnectButton.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
+		reconnectButton.addSelectionListener(this);
 		
-		serialPortText = new Text(statusRow, SWT.READ_ONLY | SWT.BORDER);
-		String longestSerialPortName = SerialUtils.getLongetPortName("/dev/tty1");
-		int maxSerialPortWidth = measureText(serialPortText, longestSerialPortName);
-		serialPortText.setLayoutData(new StripData(false, false, new Size(maxSerialPortWidth, SWT.DEFAULT), new Margin(0, 0, 3, 0)));
+		serialPortCombo = new Combo(statusRow, SWT.READ_ONLY);
+		serialPortCombo.setLayoutData(new StripData(true, false, new Margin(0, 0, 3, 0)));
+		serialPortCombo.setItems(SerialPortList.getPortNames());
+		if (serialPortCombo.getItemCount() > 0) {
+			int serialPortIndex = serialPortCombo.indexOf(serialParameters.getPortName());
+			if (serialPortIndex != -1) {
+				serialPortCombo.select(serialPortIndex);
+			}
+		}
+		serialPortCombo.addSelectionListener(this);
 		
-		baudRateText = new Text(statusRow, SWT.READ_ONLY | SWT.BORDER | SWT.RIGHT);
-		String longestBaudRateName = SerialUtils.getBaudRateName(SerialPort.BAUDRATE_256000);
-		int maxBaudRateWidth = measureText(baudRateText, longestBaudRateName);
-		baudRateText.setLayoutData(new StripData(false, false, new Size(maxBaudRateWidth, SWT.DEFAULT), new Margin(0, 0, 3, 0)));
-		baudRateText.setText(SerialUtils.getBaudRateName(serialParameters.getBaudRate()));
+		refreshSerialPortsButton = new Button(statusRow, SWT.DEFAULT);
+		refreshSerialPortsButton.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
+		refreshSerialPortsButton.setText("Refresh");
+		refreshSerialPortsButton.addSelectionListener(this);
 		
-		parametersText = new Text(statusRow, SWT.READ_ONLY | SWT.BORDER | SWT.CENTER);
-		String longestParameterName = "8N1/2";
-		int maxParameterWidth = measureText(parametersText, longestParameterName);
-		parametersText.setLayoutData(new StripData(false, false, new Size(maxParameterWidth, SWT.DEFAULT)));
+		baudRateCombo = new Combo(statusRow, SWT.READ_ONLY | SWT.RIGHT);
+		baudRateCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
+		baudRateCombo.setItems(SerialUtils.BAUDRATE_NAMES);
+		baudRateCombo.select(baudRateCombo.indexOf(SerialUtils.getBaudRateName(serialParameters.getBaudRate())));
+		baudRateCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, BAUDRATE, SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES));
 		
-		serialParameters.addListener(this);
+		dataBitsCombo = new Combo(statusRow, SWT.READ_ONLY | SWT.RIGHT);
+		dataBitsCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
+		dataBitsCombo.setItems(SerialUtils.DATABITS_NAMES);
+		dataBitsCombo.select(dataBitsCombo.indexOf(SerialUtils.getDataBitsName(serialParameters.getDataBits())));
+		dataBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, DATABITS, SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES));
+		
+		parityCombo = new Combo(statusRow, SWT.READ_ONLY | SWT.RIGHT);
+		parityCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
+		parityCombo.setItems(SerialUtils.PARITY_NAMES);
+		parityCombo.select(parityCombo.indexOf(SerialUtils.getParityName(serialParameters.getParity())));
+		parityCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, PARITY, SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES));
+		
+		stopBitsCombo = new Combo(statusRow, SWT.READ_ONLY | SWT.RIGHT);
+		stopBitsCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
+		stopBitsCombo.setItems(SerialUtils.STOPBITS_NAMES);
+		stopBitsCombo.select(stopBitsCombo.indexOf(SerialUtils.getStopBitsName(serialParameters.getStopBits())));
+		stopBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES));
+		
+		//closeConnection();
+		//openConnection();
+	}
+	
+	@Override
+	public void widgetSelected(SelectionEvent e) {
+		if (serialPortCombo == e.getSource()) {
+			onSerialPortChanged();
+		} else if (refreshSerialPortsButton == e.getSource()) {
+			onRefreshSerialPorts();
+		} else if (sendButton == e.getSource()) {
+			onSendSelected();
+		} else if (reconnectButton == e.getSource()) {
+			onReconnectClicked();
+		}
+	}
+	
+	@Override
+	public void widgetDefaultSelected(SelectionEvent e) {
 	}
 
+	private void onSerialPortChanged() {
+		int index = serialPortCombo.getSelectionIndex();
+		if (index != -1) {
+			String portName = serialPortCombo.getText();
+			serialParameters.setPortName(portName);
+		}
+	}
+		
+	private void onRefreshSerialPorts() {
+		String[] serialPorts = SerialPortList.getPortNames();
+		if (serialPorts.length > 0) {
+			serialPortCombo.setItems(serialPorts);
+			statusRow.layout(true, true);
+		}
+	}
+	
 	private void onSendSelected() {
 		String text = sendText.getText() + serialParameters.getLineEnding();
 		byte[] buf = text.getBytes();
 		serialConnection.write(buf);
+	}
+	
+	private void onReconnectClicked() {
+		closeConnection();
+		openConnection();
 	}
 	
 	public void setFocus() {
@@ -140,7 +212,7 @@ public class SerialTerminalView extends ViewPart implements SerialTerminalPrefer
 			serialConnection = new SerialConnection(serialParameters);
 			serialConnection.addSerialListener(this);
 		} catch (SerialException e) {
-			displayTextOnUiThread("Failed to open connection" + e.getMessage());
+			displayTextOnUiThread("Failed to open connection: " + e.getMessage() + "\n");
 		}
 	}
 
@@ -156,7 +228,7 @@ public class SerialTerminalView extends ViewPart implements SerialTerminalPrefer
 			serialConnection.dispose();
 			serialConnection = null;
 		} catch (IOException e) {
-			displayTextOnUiThread("Failed to close connection" + e.getMessage());
+			displayTextOnUiThread("Failed to close connection: " + e.getMessage() + "\n");
 		}
 	}
 
@@ -193,26 +265,65 @@ public class SerialTerminalView extends ViewPart implements SerialTerminalPrefer
 	}
 
 	@Override
-	public void onChanged(SerialParameters serialParameters, Object parameter, Object oldValue, Object newValue) {
-		if (SerialParameters.BAUDRATE.equals(parameter)) {
-			baudRateText.setText(SerialUtils.getBaudRateName(serialParameters.getBaudRate()));
+	public void parameterChanged(String name, String text, int value) {
+		
+		boolean isChanged = true;
+		if (BAUDRATE.equals(name)) {
+			baudRateCombo.setText(text);
+		} else if (PARITY.equals(name)) {
+			parityCombo.setText(text);
+		} else if (STOPBITS.equals(name)) {
+			stopBitsCombo.setText(text);
+		} else if (DATABITS.equals(name)) {
+			dataBitsCombo.setText(text);
+		} else {
+			isChanged = false;
 		}
 		
-		closeConnection();
-		openConnection();
+		if (isChanged) {
+			closeConnection();
+			openConnection();
+		}
 	}
 
-	private int measureText(Control control, String text) {
+	@Override
+	public void defaultParameterChanged(String name, String text, int value) {
+	}
+
+	@Override
+	public void parameterChanged(String name, String text) {
 		
-		if (text == null) return SWT.DEFAULT;
+		boolean isChanged = true;
 		
-		GC gc = new GC(control);
-		int width = gc.getCharWidth(' ');
-		for (int i = 0; i < text.length(); ++i) {
-			width += gc.getCharWidth(text.charAt(i));
+		if (SERIAL_PORT.equals(name)) {
+			serialPortCombo.setText(text);
+		} else {
+			isChanged = false;
 		}
-		gc.dispose();
 		
-		return width;
+		if (isChanged) {
+			closeConnection();
+			openConnection();
+		}
+	}
+
+	@Override
+	public void defaultParameterChanged(String name, String text) {
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		
+		if (SERIAL_PORT.equals(event.getProperty())) {
+			parameterChanged(SERIAL_PORT, (String)event.getNewValue());
+		} else if (BAUDRATE.equals(event.getProperty())) {
+			parameterChanged(BAUDRATE, SerialUtils.getBaudRateName((int)event.getNewValue()), (int)event.getNewValue());
+		} else if (PARITY.equals(event.getProperty())) {
+			parameterChanged(PARITY, SerialUtils.getParityName((int)event.getNewValue()), (int)event.getNewValue());
+		} else if (DATABITS.equals(event.getProperty())) {
+			parameterChanged(DATABITS, SerialUtils.getDataBitsName((int)event.getNewValue()), (int)event.getNewValue());
+		} else if (STOPBITS.equals(event.getProperty())) {
+			parameterChanged(STOPBITS, SerialUtils.getStopBitsName((int)event.getNewValue()), (int)event.getNewValue());
+		}
 	}
 }

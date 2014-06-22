@@ -1,76 +1,34 @@
 package net.jetblack.serialterminal.ui.io;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jssc.SerialPort;
 import jssc.SerialPortList;
 import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConstants;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 
-public class SerialParameters implements SerialTerminalPreferenceConstants, IPropertyChangeListener {
+public class SerialParameters implements SerialTerminalPreferenceConstants {
 
 	public static final int INVALID = -1;
 
-	private String portName;
-	private int baudRate;
-	private int parity;
-	private int dataBits;
-	private int stopBits;
-	private String lineEnding;
+	private final IPreferenceStore preferenceStore;
 	
-	private List<SerialParametersListener> listeners = new ArrayList<SerialParametersListener>();
-
 	public SerialParameters(IPreferenceStore preferenceStore) {
-		portName =
-				preferenceStore.contains(SERIAL_PORT)
-					? preferenceStore.getString(SERIAL_PORT)
-					: getDefaultSerialPort();
-
-		baudRate =
-				preferenceStore.contains(BAUDRATE)
-					? preferenceStore.getInt(BAUDRATE)
-					: getDefaultBaudRate();
-
-		dataBits =
-				preferenceStore.contains(DATABITS)
-					? preferenceStore.getInt(DATABITS)
-					: getDefaultDataBits();
-
-		stopBits =
-				preferenceStore.contains(STOPBITS)
-					? preferenceStore.getInt(STOPBITS)
-					: getDefaultStopBits();
-
-		parity =
-				preferenceStore.contains(PARITY)
-					? preferenceStore.getInt(PARITY)
-					: getDefaultParity();
-
-		lineEnding =
-				preferenceStore.contains(LINE_ENDING)
-					? preferenceStore.getString(LINE_ENDING)
-					: getDefaultLineEnding();
-
-		preferenceStore.addPropertyChangeListener(this);
+		this.preferenceStore = preferenceStore;
 	}
 
 	public boolean isValid() {
-		return isPortNameValid() && !(baudRate == INVALID || parity == INVALID
-				|| dataBits == INVALID || stopBits == INVALID || lineEnding == null);
+		return isPortNameValid() && !(getBaudRate() == INVALID || getParity() == INVALID
+				|| getDataBits() == INVALID || getStopBits() == INVALID || getLineEnding() == null);
 	}
 
 	public boolean isPortNameValid() {
-		if (portName == null || "".equals(portName)) {
+		if (getPortName() == null || "".equals(getPortName())) {
 			return false;
 		}
 		
 		String[] portNames = SerialPortList.getPortNames();
 		for (int i = 0; i < portNames.length; ++i) {
-			if (portName.equals(portNames[i])) {
+			if (getPortName().equals(portNames[i])) {
 				return true;
 			}
 		}
@@ -78,91 +36,85 @@ public class SerialParameters implements SerialTerminalPreferenceConstants, IPro
 	}
 	
 	public String getPortName() {
-		return portName;
+		return
+			preferenceStore.contains(SERIAL_PORT)
+				? preferenceStore.getString(SERIAL_PORT)
+				: getDefaultSerialPort();
 	}
 
 	public void setPortName(String portName) {
-		this.portName = portName;
+		preferenceStore.setValue(SERIAL_PORT, portName);
 	}
 
 	public int getBaudRate() {
-		return baudRate;
+		return
+			preferenceStore.contains(BAUDRATE)
+				? preferenceStore.getInt(BAUDRATE)
+				: getDefaultBaudRate();
 	}
 
 	public void setBaudRate(int baudRate) {
-		this.baudRate = baudRate;
+		preferenceStore.setValue(BAUDRATE, baudRate);
 	}
 
 	public int getParity() {
-		return parity;
+		return
+			preferenceStore.contains(PARITY)
+				? preferenceStore.getInt(PARITY)
+				: getDefaultParity();
 	}
 
 	public void setParity(int parity) {
-		this.parity = parity;
+		preferenceStore.setValue(PARITY, parity);
 	}
 
 	public int getDataBits() {
-		return dataBits;
+		return
+			preferenceStore.contains(DATABITS)
+				? preferenceStore.getInt(DATABITS)
+				: getDefaultDataBits();
 	}
 
 	public void setDataBits(int dataBits) {
-		this.dataBits = dataBits;
+		preferenceStore.setValue(DATABITS, dataBits);
 	}
 
 	public int getStopBits() {
-		return stopBits;
+		return
+			preferenceStore.contains(STOPBITS)
+				? preferenceStore.getInt(STOPBITS)
+				: getDefaultStopBits();
 	}
 
 	public void setStopBits(int stopBits) {
-		this.stopBits = stopBits;
+		preferenceStore.setValue(STOPBITS, stopBits);
 	}
 
 	public String getLineEnding() {
-		return lineEnding;
+		return
+			preferenceStore.contains(LINE_ENDING)
+				? preferenceStore.getString(LINE_ENDING)
+				: getDefaultLineEnding();
 	}
 
 	public void setLineEnding(String lineEnding) {
-		this.lineEnding = lineEnding;
-	}
-
-	public void addListener(SerialParametersListener listener) {
-		listeners.add(listener);
+		preferenceStore.setValue(LINE_ENDING, lineEnding);
 	}
 	
-	public void removeListener(SerialParametersListener listener) {
-		listeners.remove(listener);
+	public int getInt(String propertyName) {
+		return preferenceStore.getInt(propertyName);
 	}
 	
-	private void notifyListeners(Object parameter, Object oldValue, Object newValue) {
-		for (SerialParametersListener listener : listeners) {
-			listener.onChanged(this, parameter, oldValue, newValue);
-		}
+	public String getString(String propertyName) {
+		return preferenceStore.getString(propertyName);
 	}
 	
-	@Override
-	public void propertyChange(PropertyChangeEvent event) {
-		Object property = event.getProperty();
-		
-		boolean isChanged = true;
-		if (SERIAL_PORT.equals(property)) {
-			portName = (String)event.getNewValue();
-		} else if (BAUDRATE.equals(property)) {
-			baudRate = (int)event.getNewValue();
-		} else if (PARITY.equals(property)) {
-			parity = (int)event.getNewValue();
-		} else if (DATABITS.equals(property)) {
-			dataBits = (int)event.getNewValue();
-		} else if (STOPBITS.equals(property)) {
-			stopBits = (int)event.getNewValue();
-		} else if (LINE_ENDING.equals(property)) {
-			lineEnding = (String)event.getNewValue();
-		} else {
-			isChanged = false;
-		}
-		
-		if (isChanged) {
-			notifyListeners(property, event.getOldValue(), event.getNewValue());
-		}
+	public void setValue(String name, int value) {
+		preferenceStore.setValue(name, value);
+	}
+	
+	public void setValue(String name, String value) {
+		preferenceStore.setValue(name,  value);
 	}
 	
 	public static String getDefaultSerialPort() {
@@ -191,17 +143,17 @@ public class SerialParameters implements SerialTerminalPreferenceConstants, IPro
 	}
 
 	public String getSummary() {
-		return SerialUtils.getSummary(dataBits, parity, stopBits);
+		return SerialUtils.getSummary(getDataBits(), getParity(), getStopBits());
 	}
 	
 	@Override
 	public String toString() {
 		return
-				"PortName=\"" + portName
-				+ "\", BaudRate=" + SerialUtils.getBaudRateName(baudRate)
-				+ ", Parity=" + SerialUtils.getParityName(parity)
-				+ ", DataBits=" + SerialUtils.getDataBitsName(dataBits)
-				+ ", StopBits=" + SerialUtils.getStopBitsName(stopBits)
-				+ ", LineEnding=" + SerialUtils.getLineEndingName(lineEnding);
+				"PortName=\"" + getPortName()
+				+ "\", BaudRate=" + SerialUtils.getBaudRateName(getBaudRate())
+				+ ", Parity=" + SerialUtils.getParityName(getParity())
+				+ ", DataBits=" + SerialUtils.getDataBitsName(getDataBits())
+				+ ", StopBits=" + SerialUtils.getStopBitsName(getStopBits())
+				+ ", LineEnding=" + SerialUtils.getLineEndingName(getLineEnding());
 	}
 }
