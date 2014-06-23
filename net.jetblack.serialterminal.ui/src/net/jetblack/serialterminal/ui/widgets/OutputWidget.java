@@ -1,5 +1,6 @@
 package net.jetblack.serialterminal.ui.widgets;
 
+import jssc.SerialPortException;
 import net.jetblack.serialterminal.ui.io.SerialListener;
 import net.jetblack.serialterminal.ui.utils.SWTFontUtils;
 
@@ -41,7 +42,11 @@ public class OutputWidget implements SerialListener, SelectionListener {
 		textOutput.setMenu(popupMenu);
 	}
 	
-	public void append(final String text) {
+	public void showError(final String message, SerialPortException exception) {
+		displayTextOnUiThread(message + ": " + exception.getMessage());
+	}
+	
+	public void showStatus(final String text) {
 		displayTextOnUiThread(text);
 	}
 	
@@ -75,6 +80,10 @@ public class OutputWidget implements SerialListener, SelectionListener {
 	@Override
 	public void bytesReceived(byte[] received) {
 		displayTextOnUiThread(new String(received));
+	}
+	
+	public void readError(SerialPortException exception) {
+		showError("read: ", exception);
 	}
 
 	@Override

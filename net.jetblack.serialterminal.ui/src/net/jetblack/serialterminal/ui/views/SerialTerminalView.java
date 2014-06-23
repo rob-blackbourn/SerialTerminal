@@ -1,6 +1,6 @@
 package net.jetblack.serialterminal.ui.views;
 
-import java.io.IOException;
+import jssc.SerialPortException;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Composite;
@@ -10,7 +10,6 @@ import org.eclipse.swt.SWT;
 
 import net.jetblack.serialterminal.ui.Activator;
 import net.jetblack.serialterminal.ui.io.SerialConnection;
-import net.jetblack.serialterminal.ui.io.SerialException;
 import net.jetblack.serialterminal.ui.io.SerialParameters;
 import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConstants;
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
@@ -85,13 +84,13 @@ public class SerialTerminalView
 			return;
 		}
 
-		outputWidget.append("Connecting: " + serialParameters + "\n");
+		outputWidget.showStatus("Connecting: " + serialParameters + "\n");
 		
 		try {
 			serialConnection = new SerialConnection(serialParameters.getPortName(), serialParameters.getBaudRate(), serialParameters.getDataBits(), serialParameters.getStopBits(), serialParameters.getParity());
 			serialConnection.addSerialListener(outputWidget);
-		} catch (SerialException e) {
-			outputWidget.append("Failed to open connection: " + e.getMessage() + "\n");
+		} catch (SerialPortException e) {
+			outputWidget.showError("Failed to open connection", e);
 		}
 	}
 
@@ -100,14 +99,14 @@ public class SerialTerminalView
 			return;
 		}
 		
-		outputWidget.append("Disconnecting\n");
+		outputWidget.showStatus("Disconnecting\n");
 
 		try {
 			serialConnection.removeSerialListener(outputWidget);
-			serialConnection.dispose();
+			serialConnection.close();
 			serialConnection = null;
-		} catch (IOException e) {
-			outputWidget.append("Failed to close connection: " + e.getMessage() + "\n");
+		} catch (SerialPortException e) {
+			outputWidget.showError("Failed to close connection", e);
 		}
 	}
 
@@ -119,6 +118,10 @@ public class SerialTerminalView
 
 	@Override
 	public void send(byte[] buf) {
-		serialConnection.write(buf);
+		try {
+			serialConnection.write(buf);
+		} catch (SerialPortException e) {
+			outputWidget.showError("write", e);
+		}
 	}
 }
