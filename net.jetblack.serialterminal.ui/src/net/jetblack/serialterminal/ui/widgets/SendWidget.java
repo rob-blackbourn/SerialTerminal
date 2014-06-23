@@ -1,4 +1,4 @@
-package net.jetblack.serialterminal.ui.views;
+package net.jetblack.serialterminal.ui.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,6 @@ import net.jetblack.serialterminal.ui.io.SerialParameters;
 import net.jetblack.serialterminal.ui.io.SerialUtils;
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
-import net.jetblack.serialterminal.ui.swt.layout.StripLayout;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -20,31 +19,26 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
-public class SendRow implements SelectionListener, IPropertyChangeListener {
+public class SendWidget implements SelectionListener, IPropertyChangeListener {
 
 	private final SerialParameters serialParameters;
-	private final Composite control;
 	private final Button sendButton;
 	private final Text sendText;
 
-	private final List<SendListener> listeners = new ArrayList<SendListener>();
+	private final List<SendWidgetListener> listeners = new ArrayList<SendWidgetListener>();
 	
-	public SendRow(Composite parent, IPreferenceStore preferenceStore, SerialParameters serialParameters) {
+	public SendWidget(Composite parent, IPreferenceStore preferenceStore, SerialParameters serialParameters) {
 		
 		this.serialParameters = serialParameters;
-		
-		control = new Composite(parent, SWT.NO_TRIM);
-		control.setLayoutData(new StripData(true, false, new Margin(3, 3, 3, 0)));
-		control.setLayout(new StripLayout(true));
-		
-		sendButton = new Button(control, SWT.PUSH);
+
+		sendButton = new Button(parent, SWT.PUSH);
 		sendButton.setText("Send");
 		sendButton.addSelectionListener(this);
 
-		sendText = new Text(control, SWT.SINGLE | SWT.BORDER);
+		sendText = new Text(parent, SWT.SINGLE | SWT.BORDER);
 		sendText.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 0)));
 
-		Combo lineEndingCombo = new Combo(control, SWT.READ_ONLY);
+		Combo lineEndingCombo = new Combo(parent, SWT.READ_ONLY);
 		int selectedLineEnding = -1;
 		for (int i = 0; i < SerialUtils.LINE_ENDING_NAMES_AND_VALUES.length; ++i) {
 			lineEndingCombo.add(SerialUtils.LINE_ENDING_NAMES_AND_VALUES[i][0]);
@@ -57,29 +51,31 @@ public class SendRow implements SelectionListener, IPropertyChangeListener {
 		}
 		
 	}
-	
-	public Composite getControl() {
-		return control;
+
+	public void setFocus() {
+		if (sendText != null) {
+			sendText.setFocus();
+		}
 	}
 
-	public void addLIstener(SendListener listener) {
+	public void addLIstener(SendWidgetListener listener) {
 		listeners.add(listener);
 	}
 	
-	public void removeListener(SendListener listener) {
+	public void removeListener(SendWidgetListener listener) {
 		listeners.remove(listener);
 	}
 	
 	private void notifyListeners(byte[] buf) {
-		for (SendListener listener : listeners) {
+		for (SendWidgetListener listener : listeners) {
 			listener.send(buf);
 		}
 	}
 	@Override
 	public void widgetSelected(SelectionEvent e) {
-		String text = sendText.getText() + serialParameters.getLineEnding();
-		byte[] buf = text.getBytes();
-		notifyListeners(buf);
+		if (e.getSource() == sendButton) {
+			onSendButtonClicked();
+		}
 	}
 
 	@Override
@@ -88,5 +84,11 @@ public class SendRow implements SelectionListener, IPropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
+	}
+	
+	private void onSendButtonClicked() {
+		String text = sendText.getText() + serialParameters.getLineEnding();
+		byte[] buf = text.getBytes();
+		notifyListeners(buf);
 	}
 }
