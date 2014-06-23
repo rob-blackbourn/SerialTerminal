@@ -14,7 +14,7 @@ public class StringParameterSelectionListener implements SelectionListener {
 	private final SerialParameters serialParameters;
 	private final String name;
 	
-	private final List<StringParameterListener> listeners = new ArrayList<StringParameterListener>();
+	private final List<ParameterListener> listeners = new ArrayList<ParameterListener>();
 	
 	public StringParameterSelectionListener(SerialParameters serialParameters, String name) {
 		this.serialParameters = serialParameters;
@@ -44,16 +44,16 @@ public class StringParameterSelectionListener implements SelectionListener {
 		}
 	}
 	
-	public void addListener(StringParameterListener listener) {
+	public void addListener(ParameterListener listener) {
 		listeners.add(listener);
 	}
 	
-	public void removeListener(IntParameterListener listener) {
+	public void removeListener(ParameterListener listener) {
 		listeners.remove(listener);
 	}
 
 	private void notifyListeners(boolean isDefault, String name, String text) {
-		for (StringParameterListener listener : listeners) {
+		for (ParameterListener listener : listeners) {
 			if (isDefault) {
 				listener.defaultParameterChanged(name, text);
 			} else {

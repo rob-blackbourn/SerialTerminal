@@ -28,16 +28,14 @@ import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConsta
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.swt.layout.StripLayout;
-import net.jetblack.serialterminal.ui.utils.IntParameterListener;
 import net.jetblack.serialterminal.ui.utils.IntParameterSelectionListener;
-import net.jetblack.serialterminal.ui.utils.StringParameterListener;
+import net.jetblack.serialterminal.ui.utils.ParameterListener;
 
 public class SerialTerminalView
 	extends ViewPart
 	implements SerialTerminalPreferenceConstants,
 		SerialListener,
-		IntParameterListener,
-		StringParameterListener,
+		ParameterListener,
 		IPropertyChangeListener,
 		SelectionListener {
 
@@ -146,9 +144,6 @@ public class SerialTerminalView
 		stopBitsCombo.setItems(SerialUtils.STOPBITS_NAMES);
 		stopBitsCombo.select(stopBitsCombo.indexOf(SerialUtils.getStopBitsName(serialParameters.getStopBits())));
 		stopBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES));
-		
-		//closeConnection();
-		//openConnection();
 	}
 	
 	@Override
@@ -209,7 +204,7 @@ public class SerialTerminalView
 		displayTextOnUiThread("Connecting: " + serialParameters + "\n");
 		
 		try {
-			serialConnection = new SerialConnection(serialParameters);
+			serialConnection = new SerialConnection(serialParameters.getPortName(), serialParameters.getBaudRate(), serialParameters.getDataBits(), serialParameters.getStopBits(), serialParameters.getParity());
 			serialConnection.addSerialListener(this);
 		} catch (SerialException e) {
 			displayTextOnUiThread("Failed to open connection: " + e.getMessage() + "\n");
@@ -265,10 +260,13 @@ public class SerialTerminalView
 	}
 
 	@Override
-	public void parameterChanged(String name, String text, int value) {
+	public void parameterChanged(String name, String text) {
 		
 		boolean isChanged = true;
-		if (BAUDRATE.equals(name)) {
+		
+		if (SERIAL_PORT.equals(name)) {
+			serialPortCombo.setText(text);
+		} else if (BAUDRATE.equals(name)) {
 			baudRateCombo.setText(text);
 		} else if (PARITY.equals(name)) {
 			parityCombo.setText(text);
@@ -276,27 +274,6 @@ public class SerialTerminalView
 			stopBitsCombo.setText(text);
 		} else if (DATABITS.equals(name)) {
 			dataBitsCombo.setText(text);
-		} else {
-			isChanged = false;
-		}
-		
-		if (isChanged) {
-			closeConnection();
-			openConnection();
-		}
-	}
-
-	@Override
-	public void defaultParameterChanged(String name, String text, int value) {
-	}
-
-	@Override
-	public void parameterChanged(String name, String text) {
-		
-		boolean isChanged = true;
-		
-		if (SERIAL_PORT.equals(name)) {
-			serialPortCombo.setText(text);
 		} else {
 			isChanged = false;
 		}
@@ -317,13 +294,13 @@ public class SerialTerminalView
 		if (SERIAL_PORT.equals(event.getProperty())) {
 			parameterChanged(SERIAL_PORT, (String)event.getNewValue());
 		} else if (BAUDRATE.equals(event.getProperty())) {
-			parameterChanged(BAUDRATE, SerialUtils.getBaudRateName((int)event.getNewValue()), (int)event.getNewValue());
+			parameterChanged(BAUDRATE, SerialUtils.getBaudRateName((int)event.getNewValue()));
 		} else if (PARITY.equals(event.getProperty())) {
-			parameterChanged(PARITY, SerialUtils.getParityName((int)event.getNewValue()), (int)event.getNewValue());
+			parameterChanged(PARITY, SerialUtils.getParityName((int)event.getNewValue()));
 		} else if (DATABITS.equals(event.getProperty())) {
-			parameterChanged(DATABITS, SerialUtils.getDataBitsName((int)event.getNewValue()), (int)event.getNewValue());
+			parameterChanged(DATABITS, SerialUtils.getDataBitsName((int)event.getNewValue()));
 		} else if (STOPBITS.equals(event.getProperty())) {
-			parameterChanged(STOPBITS, SerialUtils.getStopBitsName((int)event.getNewValue()), (int)event.getNewValue());
+			parameterChanged(STOPBITS, SerialUtils.getStopBitsName((int)event.getNewValue()));
 		}
 	}
 }

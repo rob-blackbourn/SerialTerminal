@@ -19,14 +19,14 @@ public class SerialConnection implements SerialPortEventListener {
 	private int bufferIndex;
 	private int bufferLast;
 
-	public SerialConnection(SerialParameters serialParameters) throws SerialException {
+	public SerialConnection(String portName, int baudRate, int dataBits, int stopBits, int parity) throws SerialException {
 		try {
-			port = new SerialPort(serialParameters.getPortName());
+			port = new SerialPort(portName);
 			port.openPort();
-			port.setParams(serialParameters.getBaudRate(), serialParameters.getDataBits(), serialParameters.getStopBits(), serialParameters.getParity(), true, true);
+			port.setParams(baudRate, dataBits, stopBits, parity, true, true);
 			port.addEventListener(this);
 		} catch (Exception e) {
-			throw new SerialException("Error opening serial port: " + serialParameters.getPortName(), e);
+			throw new SerialException("Error opening serial port: " + portName, e);
 		}
 
 		if (port == null) {
@@ -62,28 +62,6 @@ public class SerialConnection implements SerialPortEventListener {
 		}
 	}
 	
-	public static boolean touchPort(String portName, int irate) throws SerialException {
-
-		SerialPort serialPort = new SerialPort(portName);
-
-		try {
-			serialPort.openPort();
-			serialPort.setParams(irate, 8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-			serialPort.closePort();
-			return true;
-		} catch (SerialPortException e) {
-			throw new SerialException("Error touching serial port " + portName, e);
-		} finally {
-			if (serialPort.isOpened()) {
-				try {
-					serialPort.closePort();
-				} catch (SerialPortException e) {
-					// Ignore
-				}
-			}
-		}
-	}
-
 	public synchronized void serialEvent(SerialPortEvent serialEvent) {
 		if (serialEvent.isRXCHAR()) {
 			try {
