@@ -10,7 +10,7 @@
       </category>
       <view
             name="Serial Terminal"
-            icon="icons/sample.gif"
+            icon="icons/serial.png"
             category="net.jetblack.serialterminal.ui"
             class="net.jetblack.serialterminal.ui.views.SerialTerminalView"
             id="net.jetblack.serialterminal.ui.views.SerialTerminalView">

@@ -24,6 +24,7 @@ public class SendWidget implements SelectionListener, IPropertyChangeListener {
 	private final SerialParameters serialParameters;
 	private final Button sendButton;
 	private final Text sendText;
+	private final Combo lineEndingCombo;
 
 	private final List<SendWidgetListener> listeners = new ArrayList<SendWidgetListener>();
 	
@@ -38,18 +39,7 @@ public class SendWidget implements SelectionListener, IPropertyChangeListener {
 		sendText = new Text(parent, SWT.SINGLE | SWT.BORDER);
 		sendText.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 0)));
 
-		Combo lineEndingCombo = new Combo(parent, SWT.READ_ONLY);
-		int selectedLineEnding = -1;
-		for (int i = 0; i < SerialUtils.LINE_ENDING_NAMES_AND_VALUES.length; ++i) {
-			lineEndingCombo.add(SerialUtils.LINE_ENDING_NAMES_AND_VALUES[i][0]);
-			if (SerialUtils.LINE_ENDING_NAMES_AND_VALUES[i][1].equals(serialParameters.getLineEnding())) {
-				selectedLineEnding = i;
-			}
-		}
-		if (selectedLineEnding != -1) {
-			lineEndingCombo.select(selectedLineEnding);
-		}
-		
+		lineEndingCombo = WidgetFactory.createCombo(parent, SerialUtils.LINE_ENDING_NAMES_AND_VALUES, serialParameters.getLineEnding(), "Line ending");
 	}
 
 	public void setFocus() {
