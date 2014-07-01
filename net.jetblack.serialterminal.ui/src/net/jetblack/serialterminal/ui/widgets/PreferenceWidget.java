@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jssc.SerialPortList;
+import net.jetblack.serialterminal.ui.Activator;
 import net.jetblack.serialterminal.ui.io.SerialParameters;
 import net.jetblack.serialterminal.ui.io.SerialUtils;
 import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConstants;
@@ -15,9 +16,9 @@ import net.jetblack.serialterminal.ui.utils.ParameterListener;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -36,51 +37,35 @@ public class PreferenceWidget implements SerialTerminalPreferenceConstants, Sele
 		this.serialParameters = serialParameters;
 		this.parent = parent;
 		
-		reconnectButton = new Button(parent, SWT.DEFAULT);
-		reconnectButton.setText("Reconnect");
+		reconnectButton = WidgetFactory.createButton(parent, "Reconnect", null, "Close and open the serial port");
 		reconnectButton.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
 		reconnectButton.addSelectionListener(this);
 		
-		serialPortCombo = new Combo(parent, SWT.READ_ONLY);
+		serialPortCombo = WidgetFactory.createCombo(parent, SerialPortList.getPortNames(), serialParameters.getPortName(), "Serial port");
 		serialPortCombo.setLayoutData(new StripData(true, false, new Margin(0, 0, 3, 0)));
-		serialPortCombo.setItems(SerialPortList.getPortNames());
-		if (serialPortCombo.getItemCount() > 0) {
-			int serialPortIndex = serialPortCombo.indexOf(serialParameters.getPortName());
-			if (serialPortIndex != -1) {
-				serialPortCombo.select(serialPortIndex);
-			}
-		}
 		serialPortCombo.addSelectionListener(this);
 		
-		refreshSerialPortsButton = new Button(parent, SWT.DEFAULT);
+		refreshSerialPortsButton = WidgetFactory.createButton(parent, null, new Image(parent.getDisplay(), Activator.class.getResourceAsStream("/icons/refresh.png")), "Refresh");
 		refreshSerialPortsButton.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		refreshSerialPortsButton.setText("Refresh");
 		refreshSerialPortsButton.addSelectionListener(this);
 		
-		baudRateCombo = new Combo(parent, SWT.READ_ONLY | SWT.RIGHT);
+		baudRateCombo = WidgetFactory.createCombo(parent, SerialUtils.BAUDRATE_NAMES, SerialUtils.getBaudRateName(serialParameters.getBaudRate()), "Baud rate");
 		baudRateCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		baudRateCombo.setItems(SerialUtils.BAUDRATE_NAMES);
-		baudRateCombo.select(baudRateCombo.indexOf(SerialUtils.getBaudRateName(serialParameters.getBaudRate())));
 		baudRateCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, BAUDRATE, SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES));
-		
-		dataBitsCombo = new Combo(parent, SWT.READ_ONLY | SWT.RIGHT);
+
+		dataBitsCombo = WidgetFactory.createCombo(parent, SerialUtils.DATABITS_NAMES, SerialUtils.getDataBitsName(serialParameters.getDataBits()), "Data bits");
 		dataBitsCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		dataBitsCombo.setItems(SerialUtils.DATABITS_NAMES);
-		dataBitsCombo.select(dataBitsCombo.indexOf(SerialUtils.getDataBitsName(serialParameters.getDataBits())));
 		dataBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, DATABITS, SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES));
-		
-		parityCombo = new Combo(parent, SWT.READ_ONLY | SWT.RIGHT);
+
+		parityCombo = WidgetFactory.createCombo(parent, SerialUtils.PARITY_NAMES, SerialUtils.getParityName(serialParameters.getParity()), "Parity");
 		parityCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		parityCombo.setItems(SerialUtils.PARITY_NAMES);
-		parityCombo.select(parityCombo.indexOf(SerialUtils.getParityName(serialParameters.getParity())));
 		parityCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, PARITY, SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES));
-		
-		stopBitsCombo = new Combo(parent, SWT.READ_ONLY | SWT.RIGHT);
+
+		stopBitsCombo = WidgetFactory.createCombo(parent, SerialUtils.STOPBITS_NAMES, SerialUtils.getStopBitsName(serialParameters.getStopBits()), "Stop bits");
 		stopBitsCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		stopBitsCombo.setItems(SerialUtils.STOPBITS_NAMES);
-		stopBitsCombo.select(stopBitsCombo.indexOf(SerialUtils.getStopBitsName(serialParameters.getStopBits())));
 		stopBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES));
 	}
+	
 
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
