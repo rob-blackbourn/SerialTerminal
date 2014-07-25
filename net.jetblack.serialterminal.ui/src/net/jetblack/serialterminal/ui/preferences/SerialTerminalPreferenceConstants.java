@@ -8,4 +8,7 @@ public interface SerialTerminalPreferenceConstants {
 	public static final String STOPBITS = "stopBitsPreference";
 	public static final String DATABITS = "dataBitsPreference";
 	public static final String LINE_ENDING = "lineEndingPreference";
+	public static final String ENCODING = "encodingPreference";
+	public static final String SHOW_TEXT = "showText";
+	public static final String WRAP = "wrap";
 }

@@ -28,6 +28,8 @@ public class SerialTerminalPreferencePage extends FieldEditorPreferencePage
 		addField(new IntComboFieldEditor(DATABITS, "Data Bits", SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES, -1, getFieldEditorParent()));
 		addField(new IntComboFieldEditor(STOPBITS, "Stop Bits", SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES, -1, getFieldEditorParent()));
 		addField(new ComboFieldEditor(LINE_ENDING, "Line Ending", SerialUtils.LINE_ENDING_NAMES_AND_VALUES, getFieldEditorParent()));
+		addField(new StringComboFieldEditor(ENCODING, "Encoding", getEncodingStringSource(), getFieldEditorParent()));
+		addField(new StringComboFieldEditor(ENCODING, "Encoding", getOutputFormatStringSource(), getFieldEditorParent()));
 	}
 
 	public void init(IWorkbench workbench) {
@@ -39,6 +41,26 @@ public class SerialTerminalPreferencePage extends FieldEditorPreferencePage
 			@Override
 			public String[] getStrings() {
 				return SerialPortList.getPortNames();
+			}
+		};
+	}
+	
+	private static final StringSource getEncodingStringSource() {
+		return new StringSource() {
+			
+			@Override
+			public String[] getStrings() {
+				return SerialUtils.ENCODING_NAMES;
+			}
+		};
+	}
+	
+	private static final StringSource getOutputFormatStringSource() {
+		return new StringSource() {
+			
+			@Override
+			public String[] getStrings() {
+				return SerialUtils.OUTPUT_FORMAT_NAMES;
 			}
 		};
 	}

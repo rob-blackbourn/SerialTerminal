@@ -1,25 +1,45 @@
 package net.jetblack.serialterminal.ui.views;
 
 import jssc.SerialPortException;
+import jssc.SerialPortList;
 
+import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.action.ControlContribution;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.part.*;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.part.*;
 import org.eclipse.swt.SWT;
 
 import net.jetblack.serialterminal.ui.Activator;
 import net.jetblack.serialterminal.ui.io.SerialConnection;
 import net.jetblack.serialterminal.ui.io.SerialParameters;
+import net.jetblack.serialterminal.ui.io.SerialUtils;
 import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConstants;
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.swt.layout.StripLayout;
+import net.jetblack.serialterminal.ui.utils.BoolParameterSelectionListener;
+import net.jetblack.serialterminal.ui.utils.IntParameterSelectionListener;
+import net.jetblack.serialterminal.ui.utils.StringParameterSelectionListener;
+import net.jetblack.serialterminal.ui.utils.TextParameterSelectionListener;
 import net.jetblack.serialterminal.ui.widgets.OutputWidget;
 import net.jetblack.serialterminal.ui.widgets.PreferenceWidget;
 import net.jetblack.serialterminal.ui.widgets.PreferenceWidgetListener;
 import net.jetblack.serialterminal.ui.widgets.SendWidget;
 import net.jetblack.serialterminal.ui.widgets.SendWidgetListener;
+import net.jetblack.serialterminal.ui.widgets.WidgetFactory;
 
 public class SerialTerminalView
 	extends ViewPart
@@ -30,7 +50,8 @@ public class SerialTerminalView
 	public static final String ID = "net.jetblack.serialterminal.ui.views.SerialTerminalView";
 
 	private final SerialParameters serialParameters;
-
+	private String[] _serialPorts = null;
+	
 	private Composite sendRow, preferenceRow;
 	private OutputWidget outputWidget;
 	
@@ -63,14 +84,16 @@ public class SerialTerminalView
 		StyledText textOutput = new StyledText(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		textOutput.setLayoutData(new StripData(true, true, new Margin(3)));
 		textOutput.setEditable(false);
-		outputWidget = new OutputWidget(textOutput);
-		
+		outputWidget = new OutputWidget(textOutput, serialParameters);
+
 		// 3rd row
 		preferenceRow = new Composite(parent, SWT.NO_TRIM);
 		preferenceRow.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 3)));
 		preferenceRow.setLayout(new StripLayout(true));
 		PreferenceWidget preferenceWidget = new PreferenceWidget(preferenceRow, preferenceStore, serialParameters);
 		preferenceWidget.addListener(this);
+		
+		contributeToActionBars();
 	}
 	
 	public void setFocus() {
@@ -79,6 +102,100 @@ public class SerialTerminalView
 		}
 	}
 
+	private void contributeToActionBars() {
+		IActionBars actionBars = getViewSite().getActionBars();
+		fillLocalToolBar(actionBars.getToolBarManager());
+		fillLocalPullDown(actionBars.getMenuManager());
+	}
+	
+	private void fillLocalToolBar(IToolBarManager manager) {
+		manager.add(new ControlContribution("serialPortCombo") {
+
+			@Override
+			protected Control createControl(Composite parent) {
+				
+				Composite composite = new Composite(parent, SWT.NO_TRIM);
+				StripLayout layout = new StripLayout();
+				composite.setLayout(layout);
+				
+				_serialPorts = SerialPortList.getPortNames();
+				Combo combo = WidgetFactory.createCombo(
+						composite,
+						_serialPorts,
+						serialParameters.getPortName(),
+						"Serial port",
+						new TextParameterSelectionListener(serialParameters, SERIAL_PORT));
+
+				combo.pack();
+				Point size = combo.getSize();
+				int width = Math.max(size.x, 100);
+				combo.setLayoutData(new StripData(true, true, width, SWT.DEFAULT));
+
+				return composite;
+			}
+			
+			@Override
+			public boolean isDynamic() {
+				return true;
+			}
+			
+			@Override
+			public boolean isDirty() {
+				return _serialPorts == null;
+			}
+		});
+		
+		manager.add(new ControlContribution("refreshButton") {
+
+			@Override
+			protected Control createControl(Composite parent) {
+				return WidgetFactory.createButton(
+						parent,
+						null,
+						new Image(parent.getDisplay(), Activator.class.getResourceAsStream("/icons/refresh.png")),
+						"Refresh",
+						new SelectionListener() {
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								refreshSerialPorts();
+							}
+							
+							@Override
+							public void widgetDefaultSelected(SelectionEvent e) {
+								refreshSerialPorts();
+							}
+						});
+			}
+			
+		});
+	}
+	
+	private void fillLocalPullDown(IMenuManager manager) {
+		manager.add(new ContributionItem("Configuration") {
+			@Override
+			public void fill(Menu menu, int index) {
+				
+				WidgetFactory.createCheckMenuItem(menu, "Text", serialParameters, SHOW_TEXT);
+				WidgetFactory.createCheckMenuItem(menu, "Wrap", serialParameters, WRAP);
+				
+				WidgetFactory.createRadioMenu(menu, serialParameters, "Baud Rate", BAUDRATE, SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES, SerialUtils.getBaudRateName(serialParameters.getBaudRate()));
+				WidgetFactory.createRadioMenu(menu, serialParameters, "Parity", PARITY, SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES, SerialUtils.getParityName(serialParameters.getParity()));
+				WidgetFactory.createRadioMenu(menu, serialParameters, "Data Bits", DATABITS, SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES, SerialUtils.getDataBitsName(serialParameters.getDataBits()));
+				WidgetFactory.createRadioMenu(menu, serialParameters, "Stop Bits", STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES, SerialUtils.getStopBitsName(serialParameters.getStopBits()));
+				WidgetFactory.createRadioMenu(menu, serialParameters, "Line Ending", LINE_ENDING, SerialUtils.LINE_ENDING_NAMES_AND_VALUES, SerialUtils.getLineEndingName(serialParameters.getLineEnding()));
+				WidgetFactory.createRadioMenu(menu, serialParameters, "Encoding", ENCODING, SerialUtils.ENCODING_NAMES, serialParameters.getEncoding());
+			}
+		});
+	}
+	
+	private void refreshSerialPorts() {
+		_serialPorts = null;
+		getViewSite()
+			.getActionBars()
+			.getToolBarManager()
+			.update(false);
+	}
+	
 	private void openConnection() {
 		if (!serialParameters.isValid()) {
 			return;
@@ -118,10 +235,19 @@ public class SerialTerminalView
 
 	@Override
 	public void send(byte[] buf) {
+		if (serialConnection == null) {
+			return;
+		}
+		
 		try {
 			serialConnection.write(buf);
 		} catch (SerialPortException e) {
 			outputWidget.showError("write", e);
 		}
+	}
+	
+	@Override
+	public void error(String message, Exception e) {
+		outputWidget.showError(message, e);
 	}
 }

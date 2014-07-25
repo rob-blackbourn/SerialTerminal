@@ -20,6 +20,9 @@ public class SerialTerminalPreferences extends AbstractPreferenceInitializer imp
 			store.setDefault(STOPBITS, SerialParameters.getDefaultStopBits());
 			store.setDefault(DATABITS, SerialParameters.getDefaultDataBits());
 			store.setDefault(LINE_ENDING, SerialParameters.getDefaultLineEnding());
+			store.setDefault(ENCODING, SerialParameters.getDefaultEncoding());
+			store.setDefault(SHOW_TEXT, SerialParameters.getDefaultShowText());
+			store.setDefault(WRAP, SerialParameters.getDefaultWrap());
 		}
 	}
 }

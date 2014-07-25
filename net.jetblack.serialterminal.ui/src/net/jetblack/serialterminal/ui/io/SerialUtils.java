@@ -1,10 +1,11 @@
 package net.jetblack.serialterminal.ui.io;
 
+import java.nio.charset.StandardCharsets;
+
 import jssc.SerialPort;
 import jssc.SerialPortList;
 
 public class SerialUtils {
-
 
 	public static final String[] BAUDRATE_NAMES = new String[] { "110", "300",
 			"600", "1,200", "4,800", "9,600", "14,400", "19,200", "38,400",
@@ -31,8 +32,7 @@ public class SerialUtils {
 			SerialPort.DATABITS_5, SerialPort.DATABITS_6,
 			SerialPort.DATABITS_7, SerialPort.DATABITS_8 };
 
-	public static final String[] STOPBITS_NAMES = new String[] { "1", "1 1/2",
-			"2" };
+	public static final String[] STOPBITS_NAMES = new String[] { "1", "1\u00bd", "2" };
 	public static final int[] STOPBITS_VALUES = new int[] {
 			SerialPort.STOPBITS_1, SerialPort.STOPBITS_1_5,
 			SerialPort.STOPBITS_2 };
@@ -40,6 +40,20 @@ public class SerialUtils {
 	public static final String[][] LINE_ENDING_NAMES_AND_VALUES = new String[][] {
 			{ "None", "" }, { "Cr", "\r" }, { "Lf", "\n" }, { "CrLf", "\r\n" } };
 
+	//public static final String[] ENCODING_NAMES = Charset.availableCharsets().keySet().toArray(new String[0]);
+	public static final String[] ENCODING_NAMES = new String[] {
+		StandardCharsets.US_ASCII.name(),
+		StandardCharsets.UTF_8.name(),
+		StandardCharsets.UTF_16.name(),
+		StandardCharsets.UTF_16BE.name(),
+		StandardCharsets.UTF_16LE.name(),
+		StandardCharsets.ISO_8859_1.name()
+	};
+
+	public static final String[] OUTPUT_FORMAT_NAMES = new String[] { "Wrap", "No Wrap" };
+	public static final int OUTPUT_FORMAT_WRAP = 0, OUTPUT_FORMAT_NOWRAP = 1;
+	public static final int[] OUTPUT_FORMAT_VALUES = new int[] {OUTPUT_FORMAT_WRAP, OUTPUT_FORMAT_NOWRAP};
+	
 	public static String getSummary(int dataBits, int parity, int stopBits) {
 		StringBuilder s = new StringBuilder();
 		
@@ -115,6 +129,10 @@ public class SerialUtils {
 		return null;
 	}
 	
+	public static String getOutputFormatName(int value) {
+		return getNameFromValue(OUTPUT_FORMAT_NAMES, OUTPUT_FORMAT_VALUES, value);
+	}
+
 	private static String getNameFromValue(String[] names, int[] values, int value) {
 		for (int i = 0; i < values.length; ++i) {
 			if (values[i] == value) {

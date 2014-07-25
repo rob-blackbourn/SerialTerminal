@@ -101,12 +101,20 @@ public class SerialParameters implements SerialTerminalPreferenceConstants {
 		preferenceStore.setValue(LINE_ENDING, lineEnding);
 	}
 	
+	public boolean getBoolean(String propertyName) {
+		return preferenceStore.getBoolean(propertyName);
+	}
+	
 	public int getInt(String propertyName) {
 		return preferenceStore.getInt(propertyName);
 	}
 	
 	public String getString(String propertyName) {
 		return preferenceStore.getString(propertyName);
+	}
+	
+	public void setValue(String name, boolean value) {
+		preferenceStore.setValue(name, value);
 	}
 	
 	public void setValue(String name, int value) {
@@ -142,6 +150,51 @@ public class SerialParameters implements SerialTerminalPreferenceConstants {
 		return "\r";
 	}
 
+	public String getEncoding() {
+		return
+			preferenceStore.contains(ENCODING)
+				? preferenceStore.getString(ENCODING)
+				: getDefaultEncoding();
+	}
+
+	public void setEncoding(String encoding) {
+		preferenceStore.setValue(ENCODING, encoding);
+	}
+	
+	public static String getDefaultEncoding() {
+		return "US-ASCII";
+	}
+
+	public boolean getShowText() {
+		return
+				preferenceStore.contains(SHOW_TEXT)
+					? preferenceStore.getBoolean(SHOW_TEXT)
+					: getDefaultShowText();
+	}
+
+	public void setShowText(boolean showText) {
+		preferenceStore.setValue(SHOW_TEXT, showText);
+	}
+	
+	public static boolean getDefaultShowText() {
+		return true;
+	}
+
+	public boolean getWrap() {
+		return
+				preferenceStore.contains(WRAP)
+					? preferenceStore.getBoolean(WRAP)
+					: getDefaultWrap();
+	}
+
+	public void setWrap(boolean wrap) {
+		preferenceStore.setValue(WRAP, wrap);
+	}
+	
+	public static boolean getDefaultWrap() {
+		return false;
+	}
+	
 	public String getSummary() {
 		return SerialUtils.getSummary(getDataBits(), getParity(), getStopBits());
 	}
@@ -154,6 +207,7 @@ public class SerialParameters implements SerialTerminalPreferenceConstants {
 				+ ", Parity=" + SerialUtils.getParityName(getParity())
 				+ ", DataBits=" + SerialUtils.getDataBitsName(getDataBits())
 				+ ", StopBits=" + SerialUtils.getStopBitsName(getStopBits())
-				+ ", LineEnding=" + SerialUtils.getLineEndingName(getLineEnding());
+				+ ", LineEnding=" + SerialUtils.getLineEndingName(getLineEnding()
+				+ ", encoding=" + getEncoding());
 	}
 }

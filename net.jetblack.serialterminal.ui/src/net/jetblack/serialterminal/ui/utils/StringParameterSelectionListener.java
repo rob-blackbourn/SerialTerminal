@@ -1,63 +1,35 @@
 package net.jetblack.serialterminal.ui.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.jetblack.serialterminal.ui.io.SerialParameters;
+import net.jetblack.serialterminal.ui.io.SerialUtils;
 
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Widget;
 
-public class StringParameterSelectionListener implements SelectionListener {
+public class StringParameterSelectionListener extends ParameterSelectionListener {
 	
-	private final SerialParameters serialParameters;
-	private final String name;
+	private final String[] names;
+	private final String[] values;
 	
-	private final List<ParameterListener> listeners = new ArrayList<ParameterListener>();
+	public StringParameterSelectionListener(SerialParameters serialParameters, String propertyName, String[][] namesAndValues) {
+		this(serialParameters, propertyName, SerialUtils.getNames(namesAndValues), SerialUtils.getValues(namesAndValues));
+	}
 	
-	public StringParameterSelectionListener(SerialParameters serialParameters, String name) {
-		this.serialParameters = serialParameters;
-		this.name = name;
+	public StringParameterSelectionListener(SerialParameters serialParameters, String propertyName, String[] names, String[] values) {
+		super(serialParameters, propertyName);
+		this.names = names;
+		this.values = values;
 	}
 	
 	@Override
-	public void widgetSelected(SelectionEvent e) {
-		handleSlectionEvent(false, e);
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-		handleSlectionEvent(true, e);
-	}
-	
-	private void handleSlectionEvent(boolean isDefault, SelectionEvent e) {
-		Combo combo = (Combo)e.getSource();
-		int index = combo.getSelectionIndex();
+	protected void handleSlectionEvent(boolean isDefault, SelectionEvent e) {
+		int index = getSelectionIndex((Widget)e.getSource());
 		if (index != -1) {
-			String oldValue = serialParameters.getString(name);
-			String newValue = combo.getText();
-			if ((newValue == null && oldValue == null) || (newValue != null && !newValue.equals(oldValue))) {
-				serialParameters.setValue(name, newValue);
-				notifyListeners(isDefault, name, newValue);
-			}
-		}
-	}
-	
-	public void addListener(ParameterListener listener) {
-		listeners.add(listener);
-	}
-	
-	public void removeListener(ParameterListener listener) {
-		listeners.remove(listener);
-	}
-
-	private void notifyListeners(boolean isDefault, String name, String text) {
-		for (ParameterListener listener : listeners) {
-			if (isDefault) {
-				listener.defaultParameterChanged(name, text);
-			} else {
-				listener.parameterChanged(name, text);
+			String newValue = values[index];
+			String oldValue = serialParameters.getString(propertyName);
+			if (newValue != oldValue) {
+				serialParameters.setValue(propertyName, newValue);
+				notifyListeners(isDefault, names[index], oldValue, newValue);
 			}
 		}
 	}

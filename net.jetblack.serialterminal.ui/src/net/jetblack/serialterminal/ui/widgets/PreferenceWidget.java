@@ -2,7 +2,6 @@ package net.jetblack.serialterminal.ui.widgets;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import jssc.SerialPortList;
 import net.jetblack.serialterminal.ui.Activator;
 import net.jetblack.serialterminal.ui.io.SerialParameters;
@@ -37,33 +36,28 @@ public class PreferenceWidget implements SerialTerminalPreferenceConstants, Sele
 		this.serialParameters = serialParameters;
 		this.parent = parent;
 		
-		reconnectButton = WidgetFactory.createButton(parent, "Reconnect", null, "Close and open the serial port");
+		reconnectButton = WidgetFactory.createButton(parent, "Reconnect", null, "Close and open the serial port", this);
 		reconnectButton.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		reconnectButton.addSelectionListener(this);
 		
-		serialPortCombo = WidgetFactory.createCombo(parent, SerialPortList.getPortNames(), serialParameters.getPortName(), "Serial port");
+		serialPortCombo = WidgetFactory.createCombo(parent, SerialPortList.getPortNames(), serialParameters.getPortName(), "Serial port", this);
 		serialPortCombo.setLayoutData(new StripData(true, false, new Margin(0, 0, 3, 0)));
-		serialPortCombo.addSelectionListener(this);
 		
-		refreshSerialPortsButton = WidgetFactory.createButton(parent, null, new Image(parent.getDisplay(), Activator.class.getResourceAsStream("/icons/refresh.png")), "Refresh");
+		refreshSerialPortsButton = WidgetFactory.createButton(parent, null, new Image(parent.getDisplay(), Activator.class.getResourceAsStream("/icons/refresh.png")), "Refresh", this);
 		refreshSerialPortsButton.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		refreshSerialPortsButton.addSelectionListener(this);
 		
-		baudRateCombo = WidgetFactory.createCombo(parent, SerialUtils.BAUDRATE_NAMES, SerialUtils.getBaudRateName(serialParameters.getBaudRate()), "Baud rate");
+		baudRateCombo = WidgetFactory.createCombo(parent, SerialUtils.BAUDRATE_NAMES, SerialUtils.getBaudRateName(serialParameters.getBaudRate()), "Baud rate", new IntParameterSelectionListener(serialParameters, BAUDRATE, SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES));
 		baudRateCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		baudRateCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, BAUDRATE, SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES));
 
-		dataBitsCombo = WidgetFactory.createCombo(parent, SerialUtils.DATABITS_NAMES, SerialUtils.getDataBitsName(serialParameters.getDataBits()), "Data bits");
+		dataBitsCombo = WidgetFactory.createCombo(parent, SerialUtils.DATABITS_NAMES, SerialUtils.getDataBitsName(serialParameters.getDataBits()), "Data bits", new IntParameterSelectionListener(serialParameters, DATABITS, SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES));
 		dataBitsCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		dataBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, DATABITS, SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES));
 
-		parityCombo = WidgetFactory.createCombo(parent, SerialUtils.PARITY_NAMES, SerialUtils.getParityName(serialParameters.getParity()), "Parity");
+		parityCombo = WidgetFactory.createCombo(parent, SerialUtils.PARITY_NAMES, SerialUtils.getParityName(serialParameters.getParity()), "Parity", new IntParameterSelectionListener(serialParameters, PARITY, SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES));
 		parityCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		parityCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, PARITY, SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES));
 
-		stopBitsCombo = WidgetFactory.createCombo(parent, SerialUtils.STOPBITS_NAMES, SerialUtils.getStopBitsName(serialParameters.getStopBits()), "Stop bits");
+		stopBitsCombo = WidgetFactory.createCombo(parent, SerialUtils.STOPBITS_NAMES, SerialUtils.getStopBitsName(serialParameters.getStopBits()), "Stop bits", new IntParameterSelectionListener(serialParameters, STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES));
 		stopBitsCombo.setLayoutData(new StripData(false, false, new Margin(0, 0, 3, 0)));
-		stopBitsCombo.addSelectionListener(new IntParameterSelectionListener(serialParameters, STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES));
+		
+		preferenceStore.addPropertyChangeListener(this);
 	}
 	
 
