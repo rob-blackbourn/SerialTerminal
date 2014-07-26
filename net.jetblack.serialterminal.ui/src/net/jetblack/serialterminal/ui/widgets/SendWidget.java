@@ -6,19 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.jetblack.serialterminal.ui.io.SerialParameters;
-import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.utils.StringUtils;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
-public class SendWidget implements SelectionListener, IPropertyChangeListener {
+public class SendWidget implements SelectionListener {
 
 	private final SerialParameters serialParameters;
 	private final Text sendText;
@@ -67,10 +62,6 @@ public class SendWidget implements SelectionListener, IPropertyChangeListener {
 		if (e.getSource() == sendText) {
 			onReturnPressed();
 		}
-	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent event) {
 	}
 	
 	private void onReturnPressed() {
