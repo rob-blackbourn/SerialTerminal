@@ -131,13 +131,8 @@ public class SerialTerminalView
 				composite.setLayout(layout);
 				
 				_serialPorts = SerialPortList.getPortNames();
-				Combo combo = WidgetFactory.createCombo(
-						composite,
-						_serialPorts,
-						serialParameters.getPortName(),
-						"Serial port",
-						new TextParameterSelectionListener(serialParameters, SERIAL_PORT));
-
+				Combo combo = WidgetFactory.createCombo(composite, "Serial port", _serialPorts, serialParameters.getPortName(), serialParameters, SERIAL_PORT);
+				
 				combo.pack();
 				Point size = combo.getSize();
 				int width = Math.max(size.x, 100);

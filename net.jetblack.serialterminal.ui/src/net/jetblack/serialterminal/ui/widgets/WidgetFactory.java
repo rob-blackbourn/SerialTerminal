@@ -73,6 +73,11 @@ public class WidgetFactory {
 		return menuItem;
 	}
 	
+	public static Combo createCombo(Composite parent, String title, String[] names, String defaultName, SerialParameters serialParameters, String propertyName) {
+		SelectionListener selectionListener = new TextParameterSelectionListener(serialParameters, propertyName);
+		return createCombo(parent, names, defaultName, title, selectionListener);
+	}
+	
 	public static Combo createCombo(Composite parent, String[] names, String defaultName, String toolTipText, SelectionListener selectionListener) {
 		Combo combo = new Combo(parent, SWT.READ_ONLY);
 		combo.setItems(names);
