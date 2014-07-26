@@ -25,12 +25,10 @@ public class SendWidget implements SelectionListener, IPropertyChangeListener {
 
 	private final List<SendWidgetListener> listeners = new ArrayList<SendWidgetListener>();
 	
-	public SendWidget(Composite parent, IPreferenceStore preferenceStore, SerialParameters serialParameters) {
+	public SendWidget(Text sendText, IPreferenceStore preferenceStore, SerialParameters serialParameters) {
 		
 		this.serialParameters = serialParameters;
-
-		sendText = new Text(parent, SWT.SINGLE | SWT.BORDER);
-		sendText.setLayoutData(new StripData(true, false));
+		this.sendText = sendText;
 		sendText.addSelectionListener(this);
 	}
 

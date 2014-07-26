@@ -13,10 +13,13 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.*;
 import org.eclipse.swt.SWT;
@@ -29,7 +32,6 @@ import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConsta
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.swt.layout.StripLayout;
-import net.jetblack.serialterminal.ui.utils.TextParameterSelectionListener;
 import net.jetblack.serialterminal.ui.widgets.OutputWidget;
 import net.jetblack.serialterminal.ui.widgets.SendWidget;
 import net.jetblack.serialterminal.ui.widgets.SendWidgetListener;
@@ -45,7 +47,7 @@ public class SerialTerminalView
 	private final SerialParameters serialParameters;
 	private String[] _serialPorts = null;
 	
-	private Composite sendRow;
+	private Text sendText;
 	private OutputWidget outputWidget;
 	
 	private SerialConnection serialConnection;
@@ -67,10 +69,9 @@ public class SerialTerminalView
 		parent.setLayout(new StripLayout(false));
 
 		// 1st Row
-		sendRow = new Composite(parent, SWT.NO_TRIM);
-		sendRow.setLayoutData(new StripData(true, false, new Margin(3, 3, 3, 0)));
-		sendRow.setLayout(new StripLayout(true));
-		SendWidget sendWidget = new SendWidget(sendRow, preferenceStore, serialParameters);
+		sendText = new Text(parent, SWT.SINGLE | SWT.BORDER);
+		sendText.setLayoutData(new StripData(true, false, new Margin(3, 3, 3, 0)));
+		SendWidget sendWidget = new SendWidget(sendText, preferenceStore, serialParameters);
 		sendWidget.addLIstener(this);
 		
 		// 2nd row
@@ -83,8 +84,8 @@ public class SerialTerminalView
 	}
 	
 	public void setFocus() {
-		if (sendRow != null) {
-			sendRow.setFocus();
+		if (sendText != null) {
+			sendText.setFocus();
 		}
 	}
 
@@ -127,7 +128,8 @@ public class SerialTerminalView
 			protected Control createControl(Composite parent) {
 				
 				Composite composite = new Composite(parent, SWT.NO_TRIM);
-				StripLayout layout = new StripLayout();
+				RowLayout layout = new RowLayout(SWT.HORIZONTAL);
+				layout.fill = true;
 				composite.setLayout(layout);
 				
 				_serialPorts = SerialPortList.getPortNames();
@@ -136,7 +138,7 @@ public class SerialTerminalView
 				combo.pack();
 				Point size = combo.getSize();
 				int width = Math.max(size.x, 100);
-				combo.setLayoutData(new StripData(true, true, width, SWT.DEFAULT));
+				combo.setLayoutData(new RowData(width, SWT.DEFAULT));
 
 				return composite;
 			}
