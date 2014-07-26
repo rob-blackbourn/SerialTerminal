@@ -74,7 +74,6 @@ public class SendWidget implements SelectionListener {
 		} catch (ParseException e) {
 			sendText.setSelection(e.getErrorOffset(), sendText.getCharCount());
 			sendText.getDisplay().beep();
-			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
 			notifyListeners("Failed to encode message", e);
 		}
