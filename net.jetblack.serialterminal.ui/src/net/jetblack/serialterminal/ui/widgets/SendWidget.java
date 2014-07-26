@@ -66,10 +66,14 @@ public class SendWidget implements SelectionListener {
 	
 	private void onReturnPressed() {
 		try {
-			String text = StringUtils.replaceEscapeSequencies(sendText.getText());
-			notifyListeners(text.getBytes(serialParameters.getEncoding()));
+			String unprocessedText = sendText.getText();
+			String text = StringUtils.replaceEscapeSequencies(unprocessedText);
+			String encoding = serialParameters.getEncoding();
+			byte[] bytes = text.getBytes(encoding);
+			notifyListeners(bytes);
 		} catch (ParseException e) {
 			sendText.setSelection(e.getErrorOffset(), sendText.getCharCount());
+			sendText.getDisplay().beep();
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
 			notifyListeners("Failed to encode message", e);
