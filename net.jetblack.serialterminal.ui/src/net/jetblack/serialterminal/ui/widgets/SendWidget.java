@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.jetblack.serialterminal.ui.io.SerialParameters;
-import net.jetblack.serialterminal.ui.swt.layout.Margin;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.utils.StringUtils;
 
@@ -31,7 +30,7 @@ public class SendWidget implements SelectionListener, IPropertyChangeListener {
 		this.serialParameters = serialParameters;
 
 		sendText = new Text(parent, SWT.SINGLE | SWT.BORDER);
-		sendText.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 0)));
+		sendText.setLayoutData(new StripData(true, false));
 		sendText.addSelectionListener(this);
 	}
 

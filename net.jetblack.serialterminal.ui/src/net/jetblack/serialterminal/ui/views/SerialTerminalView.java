@@ -17,7 +17,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.*;
 import org.eclipse.swt.SWT;
@@ -30,13 +29,8 @@ import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConsta
 import net.jetblack.serialterminal.ui.swt.layout.Margin;
 import net.jetblack.serialterminal.ui.swt.layout.StripData;
 import net.jetblack.serialterminal.ui.swt.layout.StripLayout;
-import net.jetblack.serialterminal.ui.utils.BoolParameterSelectionListener;
-import net.jetblack.serialterminal.ui.utils.IntParameterSelectionListener;
-import net.jetblack.serialterminal.ui.utils.StringParameterSelectionListener;
 import net.jetblack.serialterminal.ui.utils.TextParameterSelectionListener;
 import net.jetblack.serialterminal.ui.widgets.OutputWidget;
-import net.jetblack.serialterminal.ui.widgets.PreferenceWidget;
-import net.jetblack.serialterminal.ui.widgets.PreferenceWidgetListener;
 import net.jetblack.serialterminal.ui.widgets.SendWidget;
 import net.jetblack.serialterminal.ui.widgets.SendWidgetListener;
 import net.jetblack.serialterminal.ui.widgets.WidgetFactory;
@@ -44,7 +38,6 @@ import net.jetblack.serialterminal.ui.widgets.WidgetFactory;
 public class SerialTerminalView
 	extends ViewPart
 	implements SerialTerminalPreferenceConstants,
-		PreferenceWidgetListener,
 		SendWidgetListener {
 
 	public static final String ID = "net.jetblack.serialterminal.ui.views.SerialTerminalView";
@@ -52,7 +45,7 @@ public class SerialTerminalView
 	private final SerialParameters serialParameters;
 	private String[] _serialPorts = null;
 	
-	private Composite sendRow, preferenceRow;
+	private Composite sendRow;
 	private OutputWidget outputWidget;
 	
 	private SerialConnection serialConnection;
@@ -85,13 +78,6 @@ public class SerialTerminalView
 		textOutput.setLayoutData(new StripData(true, true, new Margin(3)));
 		textOutput.setEditable(false);
 		outputWidget = new OutputWidget(textOutput, serialParameters);
-
-		// 3rd row
-		preferenceRow = new Composite(parent, SWT.NO_TRIM);
-		preferenceRow.setLayoutData(new StripData(true, false, new Margin(3, 0, 3, 3)));
-		preferenceRow.setLayout(new StripLayout(true));
-		PreferenceWidget preferenceWidget = new PreferenceWidget(preferenceRow, preferenceStore, serialParameters);
-		preferenceWidget.addListener(this);
 		
 		contributeToActionBars();
 	}
@@ -109,6 +95,32 @@ public class SerialTerminalView
 	}
 	
 	private void fillLocalToolBar(IToolBarManager manager) {
+
+		
+		manager.add(new ControlContribution("reconnectButton") {
+
+			@Override
+			protected Control createControl(Composite parent) {
+				return WidgetFactory.createButton(
+						parent,
+						null,
+						new Image(parent.getDisplay(), Activator.class.getResourceAsStream("/icons/connect.png")),
+						"Reconnect",
+						new SelectionListener() {
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								reconnect();
+							}
+							
+							@Override
+							public void widgetDefaultSelected(SelectionEvent e) {
+								reconnect();
+							}
+						});
+			}
+			
+		});
+
 		manager.add(new ControlContribution("serialPortCombo") {
 
 			@Override
@@ -227,8 +239,7 @@ public class SerialTerminalView
 		}
 	}
 
-	@Override
-	public void onReconnect() {
+	public void reconnect() {
 		closeConnection();
 		openConnection();
 	}

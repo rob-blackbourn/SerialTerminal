@@ -1,39 +1,27 @@
 package net.jetblack.serialterminal.ui.widgets;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 
 import jssc.SerialPortException;
 import net.jetblack.serialterminal.ui.io.SerialListener;
 import net.jetblack.serialterminal.ui.io.SerialParameters;
-import net.jetblack.serialterminal.ui.io.SerialUtils;
 import net.jetblack.serialterminal.ui.preferences.SerialTerminalPreferenceConstants;
-import net.jetblack.serialterminal.ui.swt.layout.Margin;
-import net.jetblack.serialterminal.ui.swt.layout.StripData;
-import net.jetblack.serialterminal.ui.utils.IntParameterSelectionListener;
 import net.jetblack.serialterminal.ui.utils.SWTFontUtils;
-import net.jetblack.serialterminal.ui.utils.StringParameterSelectionListener;
-import net.jetblack.serialterminal.ui.utils.TextParameterSelectionListener;
 
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.StyledTextContent;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 
-public class OutputWidget implements SerialListener, SelectionListener, SerialTerminalPreferenceConstants {
+public class OutputWidget implements SerialListener, SerialTerminalPreferenceConstants, IPropertyChangeListener {
 
 	private final StyledText textOutput;
 	private final SerialParameters serialParameters;
 	private final StyledTextContent defaultContent;
-	private final MenuItem showTextMenuItem, wrapMenuItem;
 	private final String lineDelimiter;
-	private final Menu parityMenu, baudRateMenu, dataBitsMenu, stopBitsMenu, lineEndingMenu, encodingMenu;
 
 	private boolean isAutoScrolling = true;
 
@@ -47,25 +35,6 @@ public class OutputWidget implements SerialListener, SelectionListener, SerialTe
 		
 		Font monospacedFont = SWTFontUtils.getMonospacedFont();
 		this.textOutput.setFont(monospacedFont);
-		
-		Menu popupMenu = new Menu(textOutput);
-		showTextMenuItem = new MenuItem(popupMenu, SWT.CHECK);
-		showTextMenuItem.setText("Text");
-		showTextMenuItem.setSelection(true);
-		showTextMenuItem.addSelectionListener(this);
-		
-		wrapMenuItem = new MenuItem(popupMenu, SWT.CHECK);
-		wrapMenuItem.setText("Wrap");
-		wrapMenuItem.addSelectionListener(this);
-		
-		baudRateMenu = WidgetFactory.createRadioMenu(popupMenu, "Baud Rate", SerialUtils.BAUDRATE_NAMES, SerialUtils.getBaudRateName(serialParameters.getBaudRate()), new IntParameterSelectionListener(serialParameters, BAUDRATE, SerialUtils.BAUDRATE_NAMES, SerialUtils.BAUDRATE_VALUES));
-		parityMenu = WidgetFactory.createRadioMenu(popupMenu, "Parity", SerialUtils.PARITY_NAMES, SerialUtils.getParityName(serialParameters.getParity()), new IntParameterSelectionListener(serialParameters, PARITY, SerialUtils.PARITY_NAMES, SerialUtils.PARITY_VALUES));
-		dataBitsMenu = WidgetFactory.createRadioMenu(popupMenu, "Data Bits", SerialUtils.DATABITS_NAMES, SerialUtils.getDataBitsName(serialParameters.getDataBits()), new IntParameterSelectionListener(serialParameters, DATABITS, SerialUtils.DATABITS_NAMES, SerialUtils.DATABITS_VALUES));
-		stopBitsMenu = WidgetFactory.createRadioMenu(popupMenu, "Stop Bits", SerialUtils.STOPBITS_NAMES, SerialUtils.getStopBitsName(serialParameters.getStopBits()), new IntParameterSelectionListener(serialParameters, STOPBITS, SerialUtils.STOPBITS_NAMES, SerialUtils.STOPBITS_VALUES));
-		lineEndingMenu = WidgetFactory.createRadioMenu(popupMenu, "Line Ending", SerialUtils.getNames(SerialUtils.LINE_ENDING_NAMES_AND_VALUES), SerialUtils.getLineEndingName(serialParameters.getLineEnding()), new StringParameterSelectionListener(serialParameters, LINE_ENDING, SerialUtils.LINE_ENDING_NAMES_AND_VALUES));
-		encodingMenu = WidgetFactory.createRadioMenu(popupMenu, "Encoding", SerialUtils.ENCODING_NAMES, serialParameters.getEncoding(), new TextParameterSelectionListener(serialParameters, LINE_ENDING));
-		
-		textOutput.setMenu(popupMenu);
 	}
 	
 	public void showError(final String message, Exception exception) {
@@ -139,27 +108,20 @@ public class OutputWidget implements SerialListener, SelectionListener, SerialTe
 		showError("read: ", exception);
 	}
 
-	@Override
-	public void widgetSelected(SelectionEvent e) {
-		if (e.getSource() == showTextMenuItem) {
-			onShowTextMenuItemClicked();
-		} else if (e.getSource() == wrapMenuItem) {
-			onWrapMenuItemClicked();
-		}
-	}
-
-	@Override
-	public void widgetDefaultSelected(SelectionEvent e) {
-	}
-
-	private void onShowHexMenuItemClicked() {
-	}
-
-	private void onShowTextMenuItemClicked() {
+	private void onShowTextChanged(boolean showText) {
 		textOutput.setContent(defaultContent);
 	}
 	
-	private void onWrapMenuItemClicked() {
+	private void onWrapChanged(boolean wrap) {
 		
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		if (SHOW_TEXT.equals(event.getProperty())) {
+			onShowTextChanged((boolean)event.getNewValue());
+		} else if (WRAP.equals(event.getProperty())) {
+			onWrapChanged((boolean)event.getNewValue());
+		}
 	}
 }
